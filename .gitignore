@@ -1,0 +1,18 @@
+
+db.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+instance/
+*.sqlite3
+
+# OS/IDE
+.DS_Store
+.vscode/
+.idea/
