@@ -25,9 +25,11 @@ def create_app() -> Flask:
     # ルート/Blueprint登録
     from .routes.api import api_bp
     from .auth.routes import auth_bp
+    from .posts.routes import posts_bp
 
     app.register_blueprint(api_bp)
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(posts_bp, url_prefix="/api/posts")
 
     # ソケットイベント登録
     from .sockets.handlers import register_socket_handlers
