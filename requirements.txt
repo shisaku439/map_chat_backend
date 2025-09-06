@@ -10,5 +10,7 @@ SQLAlchemy==2.0.35
 Flask-Migrate==4.0.7
 psycopg2-binary==2.9.9
 gunicorn==21.2.0
+gevent==24.2.1
+gevent-websocket==0.10.1
 
 
