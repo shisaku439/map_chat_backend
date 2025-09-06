@@ -1,6 +1,13 @@
 from __future__ import annotations
 import os
-from app import create_app, socketio
+
+# eventletワーカー使用時は、最初期にモンキーパッチを適用して
+# 標準ライブラリ(threading/socket等)との不整合を防ぐ
+import eventlet
+
+eventlet.monkey_patch()
+
+from app import create_app, socketio  # noqa: E402
 
 app = create_app()
 
