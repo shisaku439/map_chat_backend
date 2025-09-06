@@ -7,7 +7,7 @@ from flask_socketio import SocketIO
 from .config import load_config
 from .models import db
 
-socketio = SocketIO()
+socketio = SocketIO(async_mode="gevent")
 migrate = Migrate()
 
 
@@ -38,19 +38,35 @@ def create_app() -> Flask:
 
     register_socket_handlers(socketio)
 
-    # 起動時に自動マイグレーション（スキーマを最新に）
+    # 起動時に自動マイグレーション（Shell無しでも整合を取る）
+    from sqlalchemy import inspect
+
     try:
-        from flask_migrate import upgrade
-        from sqlalchemy import inspect
+        from flask_migrate import upgrade, stamp
 
         with app.app_context():
-            upgrade()
-            # 念のため、テーブルが無ければモデルから作成
-            inspector = inspect(db.engine)
-            if not inspector.has_table("users"):
+            try:
+                upgrade()
+            except Exception:
+                # 失敗時: 最低限のスキーマを作成してヘッドにスタンプ
                 db.create_all()
+                try:
+                    stamp("head")
+                except Exception:
+                    pass
+            # 念のため存在確認。無ければ作成→スタンプ
+            inspector = inspect(db.engine)
+            if not inspector.has_table("users") or not inspector.has_table("posts"):
+                db.create_all()
+                try:
+                    stamp("head")
+                except Exception:
+                    pass
     except Exception:
-        # マイグレーション未初期化時などは無視（初回に手動init済みが前提）
-        pass
+        # flask_migrateが利用できない環境でも最低限のスキーマを用意
+        with app.app_context():
+            inspector = inspect(db.engine)
+            if not inspector.has_table("users") or not inspector.has_table("posts"):
+                db.create_all()
 
     return app
