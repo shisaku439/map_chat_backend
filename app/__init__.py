@@ -18,6 +18,8 @@ def create_app() -> Flask:
 
     # 拡張初期化
     CORS(app, resources={r"/*": {"origins": [app.config["FRONT_ORIGIN"]]}})
+    # DB接続の安定化: pool_pre_ping 有効化
+    app.config.setdefault("SQLALCHEMY_ENGINE_OPTIONS", {"pool_pre_ping": True})
     db.init_app(app)
     migrate.init_app(app, db)
     socketio.init_app(app, cors_allowed_origins=[app.config["FRONT_ORIGIN"]])
@@ -35,5 +37,15 @@ def create_app() -> Flask:
     from .sockets.handlers import register_socket_handlers
 
     register_socket_handlers(socketio)
+
+    # 起動時に自動マイグレーション（スキーマを最新に）
+    try:
+        from flask_migrate import upgrade
+
+        with app.app_context():
+            upgrade()
+    except Exception:
+        # マイグレーション未初期化時などは無視（初回に手動init済みが前提）
+        pass
 
     return app
