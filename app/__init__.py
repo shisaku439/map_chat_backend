@@ -41,9 +41,14 @@ def create_app() -> Flask:
     # 起動時に自動マイグレーション（スキーマを最新に）
     try:
         from flask_migrate import upgrade
+        from sqlalchemy import inspect
 
         with app.app_context():
             upgrade()
+            # 念のため、テーブルが無ければモデルから作成
+            inspector = inspect(db.engine)
+            if not inspector.has_table("users"):
+                db.create_all()
     except Exception:
         # マイグレーション未初期化時などは無視（初回に手動init済みが前提）
         pass
